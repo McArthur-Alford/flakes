@@ -9,7 +9,7 @@
     flake-utils.lib.eachDefaultSystem
     (system:
       let pkgs = nixpkgs.legacyPackages.${system}; in {
-        templates."rust" = {
+        templates.rust = {
           path = ./rust;
           description = "rust";
         };
