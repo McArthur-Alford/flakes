@@ -1,27 +1,11 @@
 {
-  description = "Flake for rust dev";
-
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  };
+  inputs = { nixpkgs.url = "github:nixos/nixpkgs"; };
 
   outputs = { self, nixpkgs }:
-  let
-    pkgs = import nixpkgs { };
-  in
-  pkgs.mkShell {
-    packages = with pkgs; [
-      rustToolchain
-      rust-analyzer
-      rustc
-      cargo
-      gcc
-      rustfmt
-      clippy
-    ];
-
-    shellHook = ''
-      ${pkgs.rustToolchain}/bin/cargo --version
-    '';
-  };
+    let pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in {
+      devShell.x86_64-linux = pkgs.mkShell { 
+        buildInputs = with pkgs; [ rustc rustup rustfmt rust-analyzer clippy ]; 
+      };
+   };
 }
