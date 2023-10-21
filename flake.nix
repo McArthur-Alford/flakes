@@ -10,6 +10,7 @@
     nixosModules = {
       yee = {config, pkgs, lib, ...}: {
         environment.variables.MAGIC = "MAGICAL";
+        programs.atop.enable = true;
       };
       default = self.yee;
     };
