@@ -8,21 +8,22 @@
 
   outputs = { self, nixpkgs, utils }: {
     nixosModules = {
-      yee = {config, pkgs, lib, ...}: {
-        environment.variables.MAGIC = "MAGICAL";
-        programs.atop.enable = true;
+      addRegistry = {config, pkgs, lib, ...}: {
+        nix.registry.devtemplates = {
+          to = {
+            owner = "McArthur-Alford";
+            repo = "nix-templates";
+            type = "github";
+          };
+          from = {
+            id = "devtemplates";
+            type = "indirect";
+          };
+        };
       };
-      default = self.yee;
+      default = self.addRegistry;
     };
     templates = {
-      rust = {
-        path = ./rust;
-        description = "Rust";
-        welcomeText = ''
-          # A simple Rust/Cargo Template
-          Provides access to rust and cargo. Obviously.
-        '';
-      };
       default = {
         path = ./default;
         description = "Default";
@@ -31,6 +32,19 @@
           ...to modify to your hearts content
         '';
       };
+      rust = {
+        path = ./rust;
+        description = "Rust";
+        welcomeText = ''
+          # A simple Rust/Cargo Template
+          Provides access to rust and cargo. Obviously.
+        '';
+      };
+      haskell = {};
+      java = {};
+      python = {};
+      pytorch = {};
+      c = {};
     };
   };
 }
