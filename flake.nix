@@ -40,11 +40,11 @@
           Provides access to rust and cargo. Obviously.
         '';
       };
-      haskell = {};
-      java = {};
-      python = {};
-      pytorch = {};
-      c = {};
+      # haskell = {};
+      # java = {};
+      # python = {};
+      # pytorch = {};
+      # c = {};
     };
   };
 }
