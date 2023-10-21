@@ -8,7 +8,7 @@
 
   outputs = { self, nixpkgs, utils }: {
     nixosModules = {
-      addRegistry = {config, pkgs, lib, ...}: {
+      default = {config, pkgs, lib, ...}: {
         nix.registry.devtemplates = {
           to = {
             owner = "McArthur-Alford";
@@ -21,7 +21,6 @@
           };
         };
       };
-      default = self.addRegistry;
     };
     templates = {
       default = {
