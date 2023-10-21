@@ -1,7 +1,15 @@
 {
   description = "A collection of templates";
 
-  outputs = { self }: {
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs";
+    utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, utils }: {
+    nixosModules.yee = {config, pkgs, lib, ...}: {
+      environment.variables.MAGIC = "MAGICAL";
+    };
     templates = {
       rust = {
         path = ./rust;
