@@ -12,6 +12,7 @@
 
         my-python-packages = ps: with ps; [
           python-lsp-server
+          ipython
           torch
           # This is how you might build a package from pip!
           # (buildPythonPackage rec {
