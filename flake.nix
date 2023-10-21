@@ -7,8 +7,11 @@
   };
 
   outputs = { self, nixpkgs, utils }: {
-    nixosModules.yee = {config, pkgs, lib, ...}: {
-      environment.variables.MAGIC = "MAGICAL";
+    nixosModules = {
+      yee = {config, pkgs, lib, ...}: {
+        environment.variables.MAGIC = "MAGICAL";
+      };
+      default = self.yee;
     };
     templates = {
       rust = {
