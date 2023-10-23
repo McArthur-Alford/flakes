@@ -62,6 +62,13 @@
         # Welcome to the magical world of LaTeX!
         '';
       };
+      elixir = {
+        path = ./elixir;
+        description = "Elixir Devshell";
+        welcomeText = ''
+        # Welcome to the alchemy laboratory
+        '';
+      };
       # c = {};
     };
   };
