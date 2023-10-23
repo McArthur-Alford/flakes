@@ -55,6 +55,13 @@
         # A convoluted python 3.11 template with torch/ROCM support
         '';
       };
+      latex = {
+        path = ./latex;
+        description = "LaTeX Devshell";
+        welcomeText = ''
+        # Welcome to the magical world of LaTeX!
+        '';
+      };
       # c = {};
     };
   };
