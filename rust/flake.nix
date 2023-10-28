@@ -17,14 +17,19 @@
           nativeBuildInputs = with pkgs; [ pkg-config udev alsa-lib pkg-config ];
           buildInputs = with pkgs; [ 
             cargo rustc rustfmt rust-analyzer rustPackages.clippy rustup
+            # X support:
             xorg.libX11 
             xorg.libXcursor 
             xorg.libXi 
             xorg.libXrandr
+
           ]; 
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
           shellHook = ''export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath [
             pkgs.vulkan-loader
+            # Wayland Support
+            pkgs.wayland
+            pkgs.libxkbcommon
           ]}"
           '';
          };
