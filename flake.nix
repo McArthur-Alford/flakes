@@ -39,6 +39,14 @@
         Provides access to rust and cargo. Obviously.
         '';
       };
+      c = {
+        path = ./c;
+        description = "C";
+        welcomeText = ''
+        # A simple C template
+        Provides GCC and clang
+        '';
+      };
       # haskell = {};
       # java = {};
       python311 = {

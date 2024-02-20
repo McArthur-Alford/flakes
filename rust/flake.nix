@@ -1,38 +1,73 @@
 {
   inputs = {
-    naersk.url = "github:nix-community/naersk/master";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    utils.url = "github:numtide/flake-utils";
+    crane.url = "github:ipetkov/crane";
+    crane.inputs.nixpkgs.follows = "nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, utils, naersk }:
-    utils.lib.eachDefaultSystem (system:
+  outputs = { self, nixpkgs, crane, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
-        naersk-lib = pkgs.callPackage naersk { };
+        pkgs = nixpkgs.legacyPackages.${system};
+        craneLib = crane.lib.${system};
+
+        buildDeps = (with pkgs; [
+          pkg-config
+          makeWrapper
+          clang
+          mold
+        ]);
+
+        runtimeDeps = (with pkgs; [
+          libxkbcommon
+          alsa-lib
+          udev
+          vulkan-loader
+          wayland
+        ] ++ (with xorg; [
+          libXcursor
+          libXrandr
+          libXi
+          libX11
+        ]));
+
+        my-crate = craneLib.buildPackage rec {
+          pname = "rust-program";
+          src = ./.;
+
+          nativeBuildInputs = buildDeps;
+          buildInputs = runtimeDeps;
+
+          postInstall = ''
+            wrapProgram $out/bin/${pname} \
+              --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath runtimeDeps} \
+              --prefix XCURSOR_THEME : "Adwaita"
+            mkdir -p $out/bin/assets
+            cp -a assets $out/bin
+          '';
+        };
       in
       {
-        defaultPackage = naersk-lib.buildPackage ./.;
-        devShell = with pkgs; mkShell {
-          nativeBuildInputs = with pkgs; [ pkg-config udev alsa-lib pkg-config ];
-          buildInputs = with pkgs; [ 
-            cargo rustc rustfmt rust-analyzer rustPackages.clippy rustup
-            # X support:
-            xorg.libX11 
-            xorg.libXcursor 
-            xorg.libXi 
-            xorg.libXrandr
+        checks = {
+          inherit my-crate;
+        };
 
-          ]; 
-          RUST_SRC_PATH = rustPlatform.rustLibSrc;
-          shellHook = ''export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath [
-            pkgs.vulkan-loader
-            # Wayland Support
-            pkgs.wayland
-            pkgs.libxkbcommon
-          ]}"
-          '';
-         };
+        packages.default = my-crate;
+
+        devShells.default = craneLib.devShell {
+          checks = self.checks.${system};
+
+          RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath runtimeDeps}";
+          XCURSOR_THEME = "Adwaita";
+
+          packages = with pkgs; [
+            rustfmt
+            rust-analyzer
+            rustPackages.clippy
+            rustup
+          ] ++ runtimeDeps;
+        };
       });
 }
-
