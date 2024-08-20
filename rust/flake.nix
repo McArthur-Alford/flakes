@@ -1,73 +1,62 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    crane.url = "github:ipetkov/crane";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, crane, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      crane,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        craneLib = crane.lib.${system};
+        craneLib = crane.mkLib pkgs;
 
-        buildDeps = (with pkgs; [
-          pkg-config
-          makeWrapper
-          clang
-          mold
-        ]);
+        my-crate = craneLib.buildPackage {
+          src = craneLib.cleanCargoSource ./.;
 
-        runtimeDeps = (with pkgs; [
-          libxkbcommon
-          alsa-lib
-          udev
-          vulkan-loader
-          wayland
-        ] ++ (with xorg; [
-          libXcursor
-          libXrandr
-          libXi
-          libX11
-        ]));
+          buildInputs =
+            [
+              # Add additional build inputs here
+            ]
+            ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+              # Additional darwin specific inputs can be set here
+              pkgs.libiconv
+            ];
 
-        my-crate = craneLib.buildPackage rec {
-          pname = "rust-program";
-          src = ./.;
-
-          nativeBuildInputs = buildDeps;
-          buildInputs = runtimeDeps;
-
-          postInstall = ''
-            wrapProgram $out/bin/${pname} \
-              --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath runtimeDeps} \
-              --prefix XCURSOR_THEME : "Adwaita"
-            mkdir -p $out/bin/assets
-            cp -a assets $out/bin
-          '';
+          # Additional environment variables can be set directly
+          # MY_CUSTOM_VAR = "some value";
         };
       in
       {
-        checks = {
-          inherit my-crate;
-        };
-
         packages.default = my-crate;
 
         devShells.default = craneLib.devShell {
-          checks = self.checks.${system};
+          # Additional dev-shell environment variables can be set directly
+          MY_CUSTOM_DEV_URL = "http://localhost:3000";
 
-          RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
-          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath runtimeDeps}";
-          XCURSOR_THEME = "Adwaita";
+          # Automatically inherit any build inputs from `my-crate`
+          inputsFrom = [ my-crate ];
 
-          packages = with pkgs; [
-            rustfmt
-            rust-analyzer
-            rustPackages.clippy
-            rustup
-          ] ++ runtimeDeps;
+          # Extra inputs (only used for interactive development)
+          # can be added here; cargo and rustc are provided by default.
+          packages = [
+            pkgs.cargo-audit
+            pkgs.cargo-watch
+          ];
         };
-      });
+      }
+    );
 }
